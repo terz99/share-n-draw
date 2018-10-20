@@ -69,6 +69,11 @@ public class PaintView extends View {
                         newCoords.add(currCoord);
                     }
                 }
+                if(dataSnapshot.getValue() == null){
+                    clear();
+                    return;
+                }
+
                 firstTimeDraw = false;
                 simulateDrawing(newCoords);
             }
