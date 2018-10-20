@@ -1,5 +1,6 @@
 package com.example.terz99.whiteboard;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Color;
@@ -11,20 +12,28 @@ import android.graphics.Canvas;
 import android.graphics.MaskFilter;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.provider.Settings.Secure;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Random;
 
 public class PaintView extends View {
 
+    @SuppressLint("HardwareIds")
+    private final String id = Secure.getString(getContext().getContentResolver(), Secure.ANDROID_ID);
+    private static boolean firstTimeDraw = true;
+    private final String LOG_TAG = this.getClass().getName();
     private Firebase dbReference;
     private ArrayList<Coordinates> coord;
     public static int BRUSH_SIZE = 10;
@@ -44,10 +53,31 @@ public class PaintView extends View {
         this(context, null);
     }
 
+    @SuppressLint("HardwareIds")
     public PaintView(Context context, AttributeSet attrs) {
         super(context, attrs);
         dbReference = new Firebase("https://share-n-draw.firebaseio.com/");
         coord = new ArrayList<Coordinates>();
+        dbReference.child("board").addValueEventListener(new ValueEventListener() {
+            @SuppressLint("NewApi")
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                ArrayList<Coordinates> newCoords = new ArrayList<Coordinates>();
+                for(DataSnapshot coordSnapshot : dataSnapshot.getChildren()){
+                    Coordinates currCoord = coordSnapshot.getValue(Coordinates.class);
+                    if(firstTimeDraw || !Objects.equals(currCoord.getId(), id)) {
+                        newCoords.add(currCoord);
+                    }
+                }
+                firstTimeDraw = false;
+                simulateDrawing(newCoords);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
@@ -57,7 +87,25 @@ public class PaintView extends View {
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setXfermode(null);
         mPaint.setAlpha(0xff);
+    }
 
+    private void simulateDrawing(ArrayList<Coordinates> newCoords) {
+        for(Coordinates event : newCoords){
+            switch (event.getAction()){
+                case MotionEvent.ACTION_DOWN :
+                    touchStart(event.getX(), event.getY(), false);
+                    invalidate();
+                    break;
+                case MotionEvent.ACTION_MOVE :
+                    touchMove(event.getX(), event.getY(), false);
+                    invalidate();
+                    break;
+                case MotionEvent.ACTION_UP :
+                    touchUp(event.getX(), event.getY(), false);
+                    invalidate();
+                    break;
+            }
+        }
     }
 
     public void init(DisplayMetrics metrics){
@@ -73,6 +121,7 @@ public class PaintView extends View {
     public void clear(){
         backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
+        dbReference.child("board").removeValue();
         invalidate();
     }
 
@@ -92,7 +141,7 @@ public class PaintView extends View {
         canvas.restore();
     }
 
-    private void touchStart(float x, float y){
+    private void touchStart(float x, float y, boolean addToCoord){
         mPath = new Path();
         FingerPath fp = new FingerPath(currentColor, mPath);
         paths.add(fp);
@@ -101,10 +150,12 @@ public class PaintView extends View {
         mPath.moveTo(x, y);
         mX = x;
         mY = y;
-        coord.add(new Coordinates(x, y));
+        if(addToCoord) {
+            coord.add(new Coordinates(x, y, this.id, MotionEvent.ACTION_DOWN));
+        }
     }
 
-    private void touchMove(float x, float y){
+    private void touchMove(float x, float y, boolean addToCoord){
         float dx = Math.abs(x - mX);
         float dy = Math.abs(y - mY);
 
@@ -112,7 +163,9 @@ public class PaintView extends View {
             mPath.quadTo(mX, mY, (x + mX) /2, (y + mY) /2);
             mX = x;
             mY = y;
-            coord.add(new Coordinates(x, y));
+            if(addToCoord) {
+                coord.add(new Coordinates(x, y, this.id, MotionEvent.ACTION_MOVE));
+            }
         }
     }
 
@@ -127,16 +180,22 @@ public class PaintView extends View {
         return stringBuilder.toString();
     }
 
-    private void touchUp(){
-        mPath.lineTo(mX, mY);
+    private void touchUp(float x, float y, boolean addToCoord){
+        mPath.lineTo(x, y);
+        if(addToCoord) {
+            coord.add(new Coordinates(x, y, this.id, MotionEvent.ACTION_UP));
+        }
         for(Coordinates c : coord){
             String nextStringIdx = getNextString();
-            dbReference.child("board").child(nextStringIdx).child("x").setValue(c.getmX());
-            dbReference.child("board").child(nextStringIdx).child("y").setValue(c.getmY());
+            dbReference.child("board").child(nextStringIdx).child("x").setValue(c.getX());
+            dbReference.child("board").child(nextStringIdx).child("y").setValue(c.getY());
+            dbReference.child("board").child(nextStringIdx).child("action").setValue(c.getAction());
+            dbReference.child("board").child(nextStringIdx).child("id").setValue(id);
         }
         coord.clear();
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event){
         float x = event.getX();
@@ -144,15 +203,15 @@ public class PaintView extends View {
 
         switch(event.getAction()){
             case MotionEvent.ACTION_DOWN :
-                touchStart(x, y);
+                touchStart(x, y, true);
                 invalidate();
                 break;
             case MotionEvent.ACTION_MOVE :
-                touchMove(x, y);
+                touchMove(x, y, true);
                 invalidate();
                 break;
             case MotionEvent.ACTION_UP :
-                touchUp();
+                touchUp(x, y, true);
                 invalidate();
                 break;
         }
