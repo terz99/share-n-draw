@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "507852395462",
+    "firebase_url": "https://share-n-draw.firebaseio.com",
+    "project_id": "share-n-draw",
+    "storage_bucket": "share-n-draw.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:507852395462:android:cd56371d7d800b22",
+        "android_client_info": {
+          "package_name": "com.example.terz99.whiteboard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "507852395462-vsd9qqvufttuo18eekagtl1ssghhts6n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.terz99.whiteboard",
+            "certificate_hash": "957a8be19b171db0177a64f2bf43a8075a846294"
+          }
+        },
+        {
+          "client_id": "507852395462-gm6f1ktgrlqjgiu1ap01p5u3gv1sc09s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANxePOzz-caTLHjl6IlaqIsuRe0pYW5rc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "507852395462-gm6f1ktgrlqjgiu1ap01p5u3gv1sc09s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

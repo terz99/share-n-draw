@@ -1,0 +1,8 @@
+<init-param>
+    <param-name>credential</param-name>
+    <param-value>/WEB-INF/share-n-draw-fad44a941a0d.json</param-value>
+</init-param>
+<init-param>
+<param-name>databaseUrl</param-name>
+<param-value>https://share-n-draw.firebaseio.com</param-value>
+</init-param>
