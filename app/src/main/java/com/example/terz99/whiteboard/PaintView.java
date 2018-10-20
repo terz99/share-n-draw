@@ -52,37 +52,15 @@ public class PaintView extends View {
     public PaintView(Context context) {
         this(context, null);
     }
+    public String fname = "board";
 
     @SuppressLint("HardwareIds")
     public PaintView(Context context, AttributeSet attrs) {
         super(context, attrs);
         dbReference = new Firebase("https://share-n-draw.firebaseio.com/");
         coord = new ArrayList<Coordinates>();
-        dbReference.child("board").addValueEventListener(new ValueEventListener() {
-            @SuppressLint("NewApi")
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                ArrayList<Coordinates> newCoords = new ArrayList<Coordinates>();
-                for(DataSnapshot coordSnapshot : dataSnapshot.getChildren()){
-                    Coordinates currCoord = coordSnapshot.getValue(Coordinates.class);
-                    if(firstTimeDraw || !Objects.equals(currCoord.getId(), id)) {
-                        newCoords.add(currCoord);
-                    }
-                }
-                if(dataSnapshot.getValue() == null){
-                    clear();
-                    return;
-                }
+        createChild(fname);
 
-                firstTimeDraw = false;
-                simulateDrawing(newCoords);
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
@@ -113,6 +91,34 @@ public class PaintView extends View {
         }
     }
 
+    public void createChild(String name ){
+        dbReference.child(name).addValueEventListener(new ValueEventListener() {
+            @SuppressLint("NewApi")
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                ArrayList<Coordinates> newCoords = new ArrayList<Coordinates>();
+                for(DataSnapshot coordSnapshot : dataSnapshot.getChildren()){
+                    Coordinates currCoord = coordSnapshot.getValue(Coordinates.class);
+                    if(firstTimeDraw || !Objects.equals(currCoord.getId(), id)) {
+                        newCoords.add(currCoord);
+                    }
+                }
+                if(dataSnapshot.getValue() == null){
+                    clear();
+                    return;
+                }
+
+                firstTimeDraw = false;
+                simulateDrawing(newCoords);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+
     public void init(DisplayMetrics metrics){
         int height = metrics.heightPixels;
         int width = metrics.widthPixels;
@@ -126,7 +132,7 @@ public class PaintView extends View {
     public void clear(){
         backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
-        dbReference.child("board").removeValue();
+        dbReference.child(fname).removeValue();
         invalidate();
     }
 
@@ -192,10 +198,10 @@ public class PaintView extends View {
         }
         for(Coordinates c : coord){
             String nextStringIdx = getNextString();
-            dbReference.child("board").child(nextStringIdx).child("x").setValue(c.getX());
-            dbReference.child("board").child(nextStringIdx).child("y").setValue(c.getY());
-            dbReference.child("board").child(nextStringIdx).child("action").setValue(c.getAction());
-            dbReference.child("board").child(nextStringIdx).child("id").setValue(id);
+            dbReference.child(fname).child(nextStringIdx).child("x").setValue(c.getX());
+            dbReference.child(fname).child(nextStringIdx).child("y").setValue(c.getY());
+            dbReference.child(fname).child(nextStringIdx).child("action").setValue(c.getAction());
+            dbReference.child(fname).child(nextStringIdx).child("id").setValue(id);
         }
         coord.clear();
     }
