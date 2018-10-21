@@ -13,11 +13,19 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import android.os.Handler;
 
+/**
+ * Custom adapter used to populate the view in MainActivity
+ *
+ * @see     MainActivity
+ */
 public class BoardsAdapter extends RecyclerView.Adapter<BoardsAdapter.BoardItemViewHolder> {
 
     private Context context;
     private SwipeRefreshLayout swiper;
 
+    /**
+     * Interface for click on the items in the view in MainActivity.
+     */
     public interface OnItemClickListener{
         void onItemClick(Boards board);
     }
@@ -25,6 +33,12 @@ public class BoardsAdapter extends RecyclerView.Adapter<BoardsAdapter.BoardItemV
     private OnItemClickListener listener;
     private ArrayList<Boards> boards;
 
+    /**
+     * @param context   The parent context.
+     * @param boards
+     * @param swiper    SwipeRefreshLayout object for refreshing the content.
+     * @param listener  On click listener for the items in the view.
+     */
     BoardsAdapter(Context context, ArrayList<Boards> boards, SwipeRefreshLayout swiper, OnItemClickListener listener) {
         this.context = context;
         this.boards = boards;
@@ -51,6 +65,9 @@ public class BoardsAdapter extends RecyclerView.Adapter<BoardsAdapter.BoardItemV
         });
     }
 
+    /**
+     * Method which refreshes the content in MainActivity.
+     */
     private void refresh() {
         (new Handler()).postDelayed(new Runnable() {
             @Override

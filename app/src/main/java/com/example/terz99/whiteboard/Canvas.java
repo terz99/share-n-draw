@@ -8,7 +8,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-
+/**
+ * Canvas which is used for drawing.
+ */
 public class Canvas extends AppCompatActivity {
 
     RecyclerView boards;

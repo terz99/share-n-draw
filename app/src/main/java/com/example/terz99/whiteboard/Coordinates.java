@@ -1,5 +1,8 @@
 package com.example.terz99.whiteboard;
 
+/**
+ * Represents the coordinates of the fingerpaths (the lines which are drawn on the screen).
+ */
 public class Coordinates {
     private float x;
     private float y;

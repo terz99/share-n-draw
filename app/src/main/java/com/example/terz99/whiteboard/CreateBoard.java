@@ -11,6 +11,9 @@ import com.firebase.client.Firebase;
 
 import java.util.Date;
 
+/**
+ * A screen which is used to create boards.
+ */
 public class CreateBoard extends AppCompatActivity {
 
     private Button createButton;

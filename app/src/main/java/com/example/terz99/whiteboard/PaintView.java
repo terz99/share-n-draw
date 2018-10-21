@@ -26,6 +26,12 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Random;
 
+/**
+ * PaintView. Mostly interacts with the database and contains the drawing algorithm. The drawing
+ * algorithm was referenced from here: https://medium.com/@ssaurel/learn-to-create-a-paint-application-for-android-5b16968063f8
+ * We mainly focused on the Realtime data transfer instead of the quality of the writing so please don't
+ * mind if there are glitches when drawing.
+ */
 public class PaintView extends View {
 
     @SuppressLint("HardwareIds")

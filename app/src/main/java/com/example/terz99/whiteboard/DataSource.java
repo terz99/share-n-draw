@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Dummy class for testing. Ignore it.
+ */
 public class DataSource {
 //    private Firebase dbReference;
 //    dbReference = new Firebase("https://share-n-draw.firebaseio.com/");

@@ -1,6 +1,10 @@
 package com.example.terz99.whiteboard;
 
 import android.graphics.Path;
+
+/**
+ * Fingerpath for drawing.
+ */
 public class FingerPath {
 
     public int color;
