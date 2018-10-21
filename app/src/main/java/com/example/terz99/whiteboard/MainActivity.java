@@ -1,26 +1,44 @@
 package com.example.terz99.whiteboard;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+
 import com.firebase.client.Firebase;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private PaintView paintView;
+    RecyclerView boards;
+    BoardsAdapter boardAdapter;
+    ArrayList<Boards> boardsList;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
         setContentView(R.layout.activity_main);
-        paintView = (PaintView) findViewById(R.id.paintView);
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        paintView.init(metrics);
+
+        boards = (RecyclerView)findViewById(R.id.Boards);
+        boards.setHasFixedSize(true);
+        boards.setLayoutManager(new LinearLayoutManager(this));
+
+        boardsList = (ArrayList<Boards>)DataSource.createListItems();
+        boardAdapter = new BoardsAdapter(boardsList, new BoardsAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(Boards board) {
+                // TODO: This
+                System.out.println(board.getBoard());
+            }
+        });
+        boards.setAdapter(boardAdapter);
     }
 
     @Override
@@ -33,9 +51,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
-            case R.id.clear:
-                paintView.clear();
-                return true;
+            case R.id.action_add:
+                Intent goToCreateBoard = new Intent(MainActivity.this, CreateBoard.class);
+                startActivity(goToCreateBoard);
+                break;
         }
 
         return super.onOptionsItemSelected(item);
