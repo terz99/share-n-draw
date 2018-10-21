@@ -22,7 +22,7 @@
         android:textStyle="bold" />
 
     <EditText
-        android:id="@+id/boardName"
+        android:id="@+id/name_edit_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -32,10 +32,10 @@
         android:textStyle="italic"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="@string/enter_name" />
+        android:hint="@string/enter_name"/>
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/create_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
