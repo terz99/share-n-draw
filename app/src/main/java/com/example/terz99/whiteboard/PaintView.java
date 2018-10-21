@@ -2,14 +2,11 @@ package com.example.terz99.whiteboard;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.BlurMaskFilter;
 import android.graphics.Color;
-import android.graphics.EmbossMaskFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.MaskFilter;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -17,14 +14,15 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.provider.Settings.Secure;
 
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Random;
 
@@ -32,10 +30,12 @@ public class PaintView extends View {
 
     @SuppressLint("HardwareIds")
     private final String id = Secure.getString(getContext().getContentResolver(), Secure.ANDROID_ID);
-    private static boolean firstTimeDraw = true;
+    private String boardId = null;
+    private boolean firstTimeDraw = true;
     private final String LOG_TAG = this.getClass().getName();
     private Firebase dbReference;
     private ArrayList<Coordinates> coord;
+    private HashSet<String> refKeys;
     public static int BRUSH_SIZE = 10;
     public static final int DEFAULT_COLOR = Color.RED;
     public static final int DEFAULT_BG_COLOR = Color.WHITE;
@@ -56,33 +56,9 @@ public class PaintView extends View {
     @SuppressLint("HardwareIds")
     public PaintView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        refKeys = new HashSet<String>();
         dbReference = new Firebase("https://share-n-draw.firebaseio.com/");
         coord = new ArrayList<Coordinates>();
-        dbReference.child("board").addValueEventListener(new ValueEventListener() {
-            @SuppressLint("NewApi")
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                ArrayList<Coordinates> newCoords = new ArrayList<Coordinates>();
-                for(DataSnapshot coordSnapshot : dataSnapshot.getChildren()){
-                    Coordinates currCoord = coordSnapshot.getValue(Coordinates.class);
-                    if(firstTimeDraw || !Objects.equals(currCoord.getId(), id)) {
-                        newCoords.add(currCoord);
-                    }
-                }
-                if(dataSnapshot.getValue() == null){
-                    clear();
-                    return;
-                }
-
-                firstTimeDraw = false;
-                simulateDrawing(newCoords);
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
@@ -113,9 +89,79 @@ public class PaintView extends View {
         }
     }
 
-    public void init(DisplayMetrics metrics){
+    public void init(DisplayMetrics metrics, String boardId){
         int height = metrics.heightPixels;
         int width = metrics.widthPixels;
+        this.boardId = boardId;
+        dbReference.child(boardId).addValueEventListener(new ValueEventListener() {
+            @SuppressLint("NewApi")
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                ArrayList<Coordinates> newCoords = new ArrayList<Coordinates>();
+                for(DataSnapshot coordSnapshot : dataSnapshot.getChildren()){
+                    Coordinates currCoord = coordSnapshot.getValue(Coordinates.class);
+                    if(!Objects.equals(currCoord.getId(), id)) {
+                        newCoords.add(currCoord);
+                    }
+                    refKeys.add(coordSnapshot.getKey());
+                }
+                simulateDrawing(newCoords);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+        dbReference.child(boardId).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                ArrayList<Coordinates> newCoord = new ArrayList<Coordinates>();
+                Coordinates currCoord = dataSnapshot.getValue(Coordinates.class);
+                newCoord.add(currCoord);
+                refKeys.add(dataSnapshot.getKey());
+                simulateDrawing(newCoord);
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                clear();
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                Log.e(LOG_TAG, "Could not load lines.");
+            }
+        });
+//        dbReference.child(boardId).addValueEventListener(new ValueEventListener() {
+//            @SuppressLint("NewApi")
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                ArrayList<Coordinates> newCoord = new ArrayList<Coordinates>();
+//                for(DataSnapshot coordSnapshot : dataSnapshot.getChildren()){
+//                    Coordinates currCoord = coordSnapshot.getValue(Coordinates.class);
+//                    if(!refKeys.contains(coordSnapshot.getKey()) && !Objects.equals(currCoord.getId(), id)){
+//                        newCoord.add(currCoord);
+//                    }
+//                }
+//                simulateDrawing(newCoord);
+//            }
+//
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {
+//                Log.e(LOG_TAG, "Could not load lines.");
+//            }
+//        });
 
         mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
@@ -126,7 +172,12 @@ public class PaintView extends View {
     public void clear(){
         backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
-        dbReference.child("board").removeValue();
+        for(String refKey : refKeys){
+            if(!refKey.equals("dummy")) {
+                dbReference.child(boardId).child(refKey).removeValue();
+            }
+        }
+        refKeys.clear();
         invalidate();
     }
 
@@ -192,10 +243,10 @@ public class PaintView extends View {
         }
         for(Coordinates c : coord){
             String nextStringIdx = getNextString();
-            dbReference.child("board").child(nextStringIdx).child("x").setValue(c.getX());
-            dbReference.child("board").child(nextStringIdx).child("y").setValue(c.getY());
-            dbReference.child("board").child(nextStringIdx).child("action").setValue(c.getAction());
-            dbReference.child("board").child(nextStringIdx).child("id").setValue(id);
+            dbReference.child(boardId).child(nextStringIdx).child("x").setValue(c.getX());
+            dbReference.child(boardId).child(nextStringIdx).child("y").setValue(c.getY());
+            dbReference.child(boardId).child(nextStringIdx).child("action").setValue(c.getAction());
+            dbReference.child(boardId).child(nextStringIdx).child("id").setValue(id);
         }
         coord.clear();
     }

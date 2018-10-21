@@ -13,16 +13,18 @@ public class Canvas extends AppCompatActivity {
 
     RecyclerView boards;
     private PaintView paintView;
+    private String boardId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_canvas);
+        boardId = getIntent().getStringExtra(MainActivity.BOARD_ID);
 
         paintView = (PaintView) findViewById(R.id.paintView);
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        paintView.init(metrics);
+        paintView.init(metrics, boardId);
     }
 
     @Override

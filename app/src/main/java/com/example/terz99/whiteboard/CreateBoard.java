@@ -36,8 +36,9 @@ public class CreateBoard extends AppCompatActivity {
                 dbReference.child(board.getName()).child("dummy").child("y").setValue(-1);
                 dbReference.child(board.getName()).child("dummy").child("id").setValue(-1);
                 dbReference.child(board.getName()).child("dummy").child("action").setValue(-1);
-                Intent startMainActivity = new Intent(CreateBoard.this, MainActivity.class);
-                startActivity(startMainActivity);
+                Intent startCanvas = new Intent(CreateBoard.this, Canvas.class);
+                startCanvas.putExtra(MainActivity.BOARD_ID, board.getName());
+                startActivity(startCanvas);
             }
         });
     }

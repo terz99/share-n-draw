@@ -1,6 +1,8 @@
 package com.example.terz99.whiteboard;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,8 +11,12 @@ import android.widget.TextView;
 
 
 import java.util.ArrayList;
+import android.os.Handler;
 
 public class BoardsAdapter extends RecyclerView.Adapter<BoardsAdapter.BoardItemViewHolder> {
+
+    private Context context;
+    private SwipeRefreshLayout swiper;
 
     public interface OnItemClickListener{
         void onItemClick(Boards board);
@@ -19,9 +25,11 @@ public class BoardsAdapter extends RecyclerView.Adapter<BoardsAdapter.BoardItemV
     private OnItemClickListener listener;
     private ArrayList<Boards> boards;
 
-    BoardsAdapter(ArrayList<Boards> boards, OnItemClickListener listener) {
+    BoardsAdapter(Context context, ArrayList<Boards> boards, SwipeRefreshLayout swiper, OnItemClickListener listener) {
+        this.context = context;
         this.boards = boards;
         this.listener = listener;
+        this.swiper = swiper;
     }
 
     @NonNull
@@ -34,8 +42,23 @@ public class BoardsAdapter extends RecyclerView.Adapter<BoardsAdapter.BoardItemV
 
     @Override
     public void onBindViewHolder(@NonNull BoardItemViewHolder boardItemViewHolder, int index) {
-//        boardItemViewHolder.mTextView.setText(boards.get(index).getBoard());
         boardItemViewHolder.bind(boards.get(index), listener);
+        swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refresh();
+            }
+        });
+    }
+
+    private void refresh() {
+        (new Handler()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                BoardsAdapter.this.notifyDataSetChanged();
+                swiper.setRefreshing(false);
+            }
+        }, 2000);
     }
 
     @Override
